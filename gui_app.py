@@ -20,21 +20,21 @@ from database_operations import (
     listar_maquinas,
     salvar_maquina,
     deletar_maquina,
-    registrar_toner,
-    finalizar_toner,
-    listar_toners_por_maquina,
-    get_toners_ativos_por_maquina,
-    get_toner_atual_por_cor,
+    registrar_tonner,
+    finalizar_tonner,
+    listar_tonners_por_maquina,
+    get_tonners_ativos_por_maquina,
+    get_tonner_atual_por_cor,
     get_ultimo_contador_por_maquina,
     calcular_rendimento_por_cor,
     resumo_cores_maquina,
     get_historico_por_cor,
-    editar_toner,
+    editar_tonner,
     registrar_contador,
     listar_contadores,
     deletar_contador
 )
-from models import Maquina, Toner
+from models import Maquina, tonner
 from relatorios import gerar_relatorio_pdf, gerar_relatorio_excel
 from calendar_widget import DateEntry
 
@@ -88,12 +88,12 @@ CORES_CLARO = {
 CORES = CORES_CLARO  # Tema padrão: claro
 
 
-class ControleTonerApp(ctk.CTk):
+class ControletonnerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         # ========== CONFIGURAÇÃO DA JANELA ==========
-        self.title("Controle de Toner v3.0")
+        self.title("Controle de tonner v3.0")
 
         try:
             # Para Windows
@@ -126,12 +126,12 @@ class ControleTonerApp(ctk.CTk):
 
         print("📦 Inicializando banco de dados...")
         init_database()
-        self._migrar_contadores_de_toners()
+        self._migrar_contadores_de_tonners()
         print("✅ Banco de dados inicializado!")
 
         # Variáveis de controle
         self.maquina_atual = None
-        self.toner_selecionado = None
+        self.tonner_selecionado = None
 
         # Cria a interface
         self.setup_ui()
@@ -144,10 +144,10 @@ class ControleTonerApp(ctk.CTk):
         print("✅ Interface carregada!")
 
 
-    def _migrar_contadores_de_toners(self):
+    def _migrar_contadores_de_tonners(self):
         """
         Popula a tabela contadores_semanais com dados históricos:
-        1. Trocas de toner já registradas
+        1. Trocas de tonner já registradas
         2. Contador inicial do cadastro de cada máquina (quando > 0)
         Não duplica registros já existentes.
         """
@@ -156,10 +156,10 @@ class ControleTonerApp(ctk.CTk):
         cursor = conn.cursor()
         inseridos = 0
 
-        # 1. Importa das trocas de toner existentes
+        # 1. Importa das trocas de tonner existentes
         cursor.execute("""
             SELECT maquina_id, data_instalacao, contador_inicial, cor
-            FROM toners_individual
+            FROM tonners_individual
             WHERE data_instalacao IS NOT NULL AND contador_inicial > 0
             ORDER BY maquina_id, data_instalacao
         """)
@@ -169,7 +169,7 @@ class ControleTonerApp(ctk.CTk):
                 WHERE maquina_id=? AND data=? AND contador=?
             """, (maquina_id, data, contador))
             if cursor.fetchone() is None:
-                inseridos += 1  # (trocas de toner não são importadas para contadores)
+                inseridos += 1  # (trocas de tonner não são importadas para contadores)
 
         # 2. Importa contador_atual do cadastro de cada máquina (se ainda não existir esse valor)
         from datetime import datetime as _dt
@@ -195,10 +195,10 @@ class ControleTonerApp(ctk.CTk):
                 """, (maquina_id, data, contador, "Contador atual do cadastro"))
                 inseridos += 1
 
-        # Remove registros de troca de toner que possam ter sido inseridos anteriormente
+        # Remove registros de troca de tonner que possam ter sido inseridos anteriormente
         cursor.execute("""
             DELETE FROM contadores_semanais
-            WHERE observacao LIKE 'Troca de toner%'
+            WHERE observacao LIKE 'Troca de tonner%'
         """)
 
         conn.commit()
@@ -229,7 +229,7 @@ class ControleTonerApp(ctk.CTk):
 
         self.logo_label = ctk.CTkLabel(
             logo_frame,
-            text="◉ Controle Toner",
+            text="◉ Controle tonner",
             font=ctk.CTkFont(family="Inter", size=18, weight="bold"),
             text_color=CORES['text_primary']
         )
@@ -876,18 +876,18 @@ class ControleTonerApp(ctk.CTk):
                         observacao="Contador inicial do cadastro"
                     )
 
-                # Cria um toner ativo para cada cor automaticamente
+                # Cria um tonner ativo para cada cor automaticamente
                 cores = ["Preto", "Ciano", "Magenta", "Amarelo"] if tipo == "Colorida" else ["Preto"]
                 for cor in cores:
-                    toner_inicial = Toner(
+                    tonner_inicial = tonner(
                         maquina_id=novo_id,
                         cor=cor,
                         data_instalacao=data_cad_iso,
                         contador_inicial=contador,
                         custo=0.0,
-                        observacao="Toner inicial — cadastro da máquina"
+                        observacao="tonner inicial — cadastro da máquina"
                     )
-                    registrar_toner(toner_inicial)
+                    registrar_tonner(tonner_inicial)
 
                 print(f"✅ Nova máquina criada: {nome} (ID: {novo_id})")
 
@@ -965,12 +965,12 @@ class ControleTonerApp(ctk.CTk):
 
     # ========== ABA 2: TROCA SIMPLIFICADA ==========
     def aba_troca_simplificada(self):
-        """Interface para registrar troca de toner em UM ÚNICO PASSO"""
+        """Interface para registrar troca de tonner em UM ÚNICO PASSO"""
 
         main_frame, canvas, scrollable_frame = self.criar_frame_com_scroll()
 
-        self.criar_titulo(scrollable_frame, "Registrar Troca de Toner",
-                          "Registre a substituição de um toner em um único passo")
+        self.criar_titulo(scrollable_frame, "Registrar Troca de tonner",
+                          "Registre a substituição de um tonner em um único passo")
 
         card = self.criar_card(scrollable_frame, "🔄 Nova Troca")
         card.pack(fill="both", padx=20, pady=10, expand=True)
@@ -1012,7 +1012,7 @@ class ControleTonerApp(ctk.CTk):
         self.combo_troca_maquina.set("Selecione uma máquina...")
         row += 1
 
-        # ========== FRAME DE INFORMAÇÕES DO TONER ATUAL ==========
+        # ========== FRAME DE INFORMAÇÕES DO tonner ATUAL ==========
         self.info_frame = ctk.CTkFrame(form_frame, fg_color=CORES['bg_tertiary'], corner_radius=8)
         self.info_frame.grid(row=row, column=0, columnspan=2, padx=0, pady=8, sticky="ew")
         self.info_frame.grid_columnconfigure(0, weight=1)
@@ -1020,7 +1020,7 @@ class ControleTonerApp(ctk.CTk):
 
         self.info_label = ctk.CTkLabel(
             self.info_frame,
-            text="Selecione uma máquina para ver o toner atual",
+            text="Selecione uma máquina para ver o tonner atual",
             font=ctk.CTkFont(family="Inter", size=11),
             text_color=CORES['text_secondary']
         )
@@ -1031,19 +1031,19 @@ class ControleTonerApp(ctk.CTk):
         separator.grid(row=row, column=0, columnspan=2, padx=0, pady=15, sticky="ew")
         row += 1
 
-        # ========== DADOS DO NOVO TONER ==========
+        # ========== DADOS DO NOVO tonner ==========
         ctk.CTkLabel(
             form_frame,
-            text="📦 NOVO TONER",
+            text="📦 NOVO tonner",
             font=ctk.CTkFont(family="Inter", size=14, weight="bold"),
             text_color=CORES['text_primary']
         ).grid(row=row, column=0, columnspan=2, padx=0, pady=(0, 10), sticky="w")
         row += 1
 
-        # Cor do Novo Toner
+        # Cor do Novo tonner
         ctk.CTkLabel(
             form_frame,
-            text="Cor do Toner:",
+            text="Cor do tonner:",
             font=ctk.CTkFont(family="Inter", size=12),
             text_color=CORES['text_secondary']
         ).grid(row=row, column=0, padx=(0, 10), pady=8, sticky="e")
@@ -1119,7 +1119,7 @@ class ControleTonerApp(ctk.CTk):
         self.troca_contador_info.pack(side="left", padx=(12, 0))
         row += 1
 
-        # Custo do Novo Toner
+        # Custo do Novo tonner
         ctk.CTkLabel(
             form_frame,
             text="Custo (R$):",
@@ -1194,7 +1194,7 @@ class ControleTonerApp(ctk.CTk):
         btn_limpar.pack(side="left")
 
     def carregar_info_troca(self, escolha=None):
-        """Carrega informações do toner atual quando seleciona uma máquina"""
+        """Carrega informações do tonner atual quando seleciona uma máquina"""
         nome_maquina = self.combo_troca_maquina.get()
 
         if nome_maquina and nome_maquina != "Selecione uma máquina...":
@@ -1203,19 +1203,19 @@ class ControleTonerApp(ctk.CTk):
                 if m.nome == nome_maquina:
                     self.maquina_atual = m
 
-                    # Busca TODOS os toners ativos (um de cada cor)
-                    toneres_ativos = get_toners_ativos_por_maquina(m.id)
+                    # Busca TODOS os tonners ativos (um de cada cor)
+                    tonneres_ativos = get_tonners_ativos_por_maquina(m.id)
 
-                    # Mostra informações dos toners atuais por cor
-                    if toneres_ativos:
-                        info = "📌 Toners ATUAIS:\n"
-                        for t in toneres_ativos:
+                    # Mostra informações dos tonners atuais por cor
+                    if tonneres_ativos:
+                        info = "📌 tonners ATUAIS:\n"
+                        for t in tonneres_ativos:
                             info += f"   • {t.cor}: Instalado em {t.data_instalacao} (Cont: {t.contador_inicial:,})\n"
 
                         self.info_label.configure(text=info, text_color=CORES['text_primary'])
                     else:
                         self.info_label.configure(
-                            text="✅ Nenhum toner ativo - Primeira instalação",
+                            text="✅ Nenhum tonner ativo - Primeira instalação",
                             text_color=CORES['success']
                         )
 
@@ -1239,7 +1239,7 @@ class ControleTonerApp(ctk.CTk):
                     break
 
     def registrar_troca_unica(self):
-        """Registra uma troca de toner em UM ÚNICO PASSO"""
+        """Registra uma troca de tonner em UM ÚNICO PASSO"""
         try:
             # ========== VALIDAÇÕES ==========
             nome_maquina = self.combo_troca_maquina.get()
@@ -1249,7 +1249,7 @@ class ControleTonerApp(ctk.CTk):
 
             cor = self.combo_troca_cor.get()
             if not cor or cor == "Selecione uma máquina primeiro":
-                messagebox.showerror("Erro", "Selecione a cor do toner!")
+                messagebox.showerror("Erro", "Selecione a cor do tonner!")
                 return
 
             data = self.troca_data.get().strip()
@@ -1285,7 +1285,7 @@ class ControleTonerApp(ctk.CTk):
 
             custo_texto = self.troca_custo.get().strip()
             if not custo_texto:
-                messagebox.showerror("Erro", "Informe o custo do toner!")
+                messagebox.showerror("Erro", "Informe o custo do tonner!")
                 return
 
             try:
@@ -1295,30 +1295,30 @@ class ControleTonerApp(ctk.CTk):
                 messagebox.showerror("Erro", "Custo inválido!")
                 return
 
-            # ========== FINALIZAR TONER ANTERIOR DA MESMA COR (SE EXISTIR) ==========
-            from database_operations import get_toner_atual_por_cor
+            # ========== FINALIZAR tonner ANTERIOR DA MESMA COR (SE EXISTIR) ==========
+            from database_operations import get_tonner_atual_por_cor
 
-            toner_anterior = get_toner_atual_por_cor(self.maquina_atual.id, cor)
+            tonner_anterior = get_tonner_atual_por_cor(self.maquina_atual.id, cor)
 
-            if toner_anterior:
-                # Verifica se contador é maior que o inicial do toner anterior
-                if contador_atual <= toner_anterior.contador_inicial:
+            if tonner_anterior:
+                # Verifica se contador é maior que o inicial do tonner anterior
+                if contador_atual <= tonner_anterior.contador_inicial:
                     messagebox.showerror("Erro",
-                                         f"Contador deve ser maior que o inicial do toner {cor} anterior ({toner_anterior.contador_inicial})!")
+                                         f"Contador deve ser maior que o inicial do tonner {cor} anterior ({tonner_anterior.contador_inicial})!")
                     return
 
-                # Finaliza toner anterior
-                finalizar_toner(toner_anterior.id, data_sql, contador_atual)
+                # Finaliza tonner anterior
+                finalizar_tonner(tonner_anterior.id, data_sql, contador_atual)
 
-                # Calcula impressões do toner anterior
-                impressoes_anteriores = contador_atual - toner_anterior.contador_inicial
-                msg_anterior = (f"✓ Toner {cor} anterior finalizado\n"
+                # Calcula impressões do tonner anterior
+                impressoes_anteriores = contador_atual - tonner_anterior.contador_inicial
+                msg_anterior = (f"✓ tonner {cor} anterior finalizado\n"
                                 f"  Impressões: {impressoes_anteriores:,}")
             else:
-                msg_anterior = f"✓ Primeiro toner {cor} da máquina"
+                msg_anterior = f"✓ Primeiro tonner {cor} da máquina"
 
-            # ========== INSTALAR NOVO TONER ==========
-            novo_toner = Toner(
+            # ========== INSTALAR NOVO tonner ==========
+            novo_tonner = tonner(
                 maquina_id=self.maquina_atual.id,
                 cor=cor,
                 data_instalacao=data_sql,
@@ -1327,22 +1327,22 @@ class ControleTonerApp(ctk.CTk):
                 observacao=self.troca_obs.get()
             )
 
-            novo_id = registrar_toner(novo_toner)
+            novo_id = registrar_tonner(novo_tonner)
 
             # ========== MENSAGEM DE SUCESSO ==========
             custo_formatado = f"{custo:.2f}".replace('.', ',')
 
             msg = (f"✅ Troca registrada com sucesso!\n\n"
                    f"{msg_anterior}\n\n"
-                   f"📦 Novo toner {cor} instalado\n"
+                   f"📦 Novo tonner {cor} instalado\n"
                    f"💰 Custo: R$ {custo_formatado}\n"
                    f"🔢 Contador: {contador_atual}")
 
-            # Alerta se teve toner anterior com baixo rendimento
-            if toner_anterior:
-                impressoes_anteriores = contador_atual - toner_anterior.contador_inicial
+            # Alerta se teve tonner anterior com baixo rendimento
+            if tonner_anterior:
+                impressoes_anteriores = contador_atual - tonner_anterior.contador_inicial
                 if impressoes_anteriores < 14500:
-                    msg += f"\n\n⚠️ ATENÇÃO: Toner {cor} anterior teve baixo rendimento!"
+                    msg += f"\n\n⚠️ ATENÇÃO: tonner {cor} anterior teve baixo rendimento!"
                     messagebox.showwarning("Rendimento Baixo", msg)
                 else:
                     messagebox.showinfo("Sucesso", msg)
@@ -1440,14 +1440,14 @@ class ControleTonerApp(ctk.CTk):
         cores = ['Preto', 'Ciano', 'Magenta', 'Amarelo']
 
         for cor in cores:
-            # Busca toner ativo desta cor
-            toner_ativo = get_toner_atual_por_cor(maquina_id, cor)
+            # Busca tonner ativo desta cor
+            tonner_ativo = get_tonner_atual_por_cor(maquina_id, cor)
 
             tab_frame = ctk.CTkFrame(self.notebook, fg_color=CORES['bg_secondary'])
             self.notebook.add(tab_frame, text=f"  {cor}  ")
 
-            # Banner EM USO no topo da aba (se houver toner ativo)
-            if toner_ativo:
+            # Banner EM USO no topo da aba (se houver tonner ativo)
+            if tonner_ativo:
                 em_uso_frame = ctk.CTkFrame(tab_frame, fg_color='#1A3A2A', corner_radius=8)
                 em_uso_frame.pack(fill="x", padx=20, pady=(15, 0))
 
@@ -1459,9 +1459,9 @@ class ControleTonerApp(ctk.CTk):
 
                 ctk.CTkLabel(
                     em_uso_frame,
-                    text=f"🟢  EM USO  |  Instalado em: {fmt_data(toner_ativo.data_instalacao)}  |  "
-                         f"Cont. Inicial: {toner_ativo.contador_inicial:,}".replace(",", ".")
-                         + f"  |  Custo: R$ {toner_ativo.custo:.2f}".replace('.', ','),
+                    text=f"🟢  EM USO  |  Instalado em: {fmt_data(tonner_ativo.data_instalacao)}  |  "
+                         f"Cont. Inicial: {tonner_ativo.contador_inicial:,}".replace(",", ".")
+                         + f"  |  Custo: R$ {tonner_ativo.custo:.2f}".replace('.', ','),
                     font=ctk.CTkFont(family="Inter", size=12, weight="bold"),
                     text_color='#4ADE80'
                 ).pack(padx=15, pady=10)
@@ -1476,7 +1476,7 @@ class ControleTonerApp(ctk.CTk):
 
                 ctk.CTkLabel(
                     resumo_frame,
-                    text=f"Total Finalizados: {r['total_toners']}",
+                    text=f"Total Finalizados: {r['total_tonners']}",
                     font=ctk.CTkFont(family="Inter", size=12, weight="bold"),
                     text_color=CORES['text_primary']
                 ).grid(row=0, column=0, padx=10, pady=10, sticky="w")
@@ -1502,10 +1502,10 @@ class ControleTonerApp(ctk.CTk):
                     text_color=CORES['text_secondary']
                 ).grid(row=0, column=3, padx=10, pady=10, sticky="w")
 
-            elif not toner_ativo:
+            elif not tonner_ativo:
                 ctk.CTkLabel(
                     tab_frame,
-                    text=f"Nenhum toner {cor} registrado ainda",
+                    text=f"Nenhum tonner {cor} registrado ainda",
                     font=ctk.CTkFont(family="Inter", size=14),
                     text_color=CORES['text_muted']
                 ).pack(expand=True)
@@ -1526,8 +1526,8 @@ class ControleTonerApp(ctk.CTk):
                     if not sel:
                         messagebox.showwarning("Atencao", "Selecione um registro para editar.")
                         return
-                    toner_id = tr[0].set(sel[0], "id")
-                    self.janela_editar_toner(int(toner_id), mid)
+                    tonner_id = tr[0].set(sel[0], "id")
+                    self.janela_editar_tonner(int(tonner_id), mid)
 
                 ctk.CTkButton(
                     btn_editar_frame,
@@ -1586,7 +1586,7 @@ class ControleTonerApp(ctk.CTk):
                 cursor = conn.cursor()
                 cursor.execute(
                     "SELECT id, data_instalacao, data_retirada, contador_inicial, contador_final, custo "
-                    "FROM toners_individual WHERE maquina_id=? AND cor=? AND data_retirada IS NOT NULL "
+                    "FROM tonners_individual WHERE maquina_id=? AND cor=? AND data_retirada IS NOT NULL "
                     "ORDER BY data_instalacao DESC",
                     (maquina_id, cor)
                 )
@@ -1617,22 +1617,22 @@ class ControleTonerApp(ctk.CTk):
 
                 # Duplo clique também abre edição
                 tree.bind("<Double-1>", lambda e, tr=tree_ref, mid=maquina_id: (
-                    self.janela_editar_toner(int(tr[0].set(tr[0].selection()[0], "id")), mid)
+                    self.janela_editar_tonner(int(tr[0].set(tr[0].selection()[0], "id")), mid)
                     if tr[0].selection() else None
                 ))
 
 
-    def janela_editar_toner(self, toner_id: int, maquina_id: int):
-        """Janela modal para editar um registro de toner"""
+    def janela_editar_tonner(self, tonner_id: int, maquina_id: int):
+        """Janela modal para editar um registro de tonner"""
         from database import get_conexao
         from calendar_widget import DateEntry
 
-        # Busca dados atuais do toner
+        # Busca dados atuais do tonner
         conn = get_conexao()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT cor, data_instalacao, data_retirada, contador_inicial, contador_final, custo, observacao "
-            "FROM toners_individual WHERE id=?", (toner_id,)
+            "FROM tonners_individual WHERE id=?", (tonner_id,)
         )
         row = cursor.fetchone()
         conn.close()
@@ -1650,7 +1650,7 @@ class ControleTonerApp(ctk.CTk):
             return d or ""
 
         janela = ctk.CTkToplevel(self)
-        janela.title("Editar Toner")
+        janela.title("Editar tonner")
         janela.geometry("480x560")
         janela.resizable(False, False)
         janela.grab_set()
@@ -1659,10 +1659,10 @@ class ControleTonerApp(ctk.CTk):
         y = self.winfo_rooty() + (self.winfo_height() - 560) // 2
         janela.geometry(f"+{x}+{y}")
 
-        ctk.CTkLabel(janela, text="Editar Registro de Toner",
+        ctk.CTkLabel(janela, text="Editar Registro de tonner",
                      font=ctk.CTkFont(family="Inter", size=16, weight="bold"),
                      text_color=CORES['text_primary']).pack(padx=30, pady=(24, 4), anchor="w")
-        ctk.CTkLabel(janela, text=f"ID: {toner_id}",
+        ctk.CTkLabel(janela, text=f"ID: {tonner_id}",
                      font=ctk.CTkFont(family="Inter", size=11),
                      text_color=CORES['text_muted']).pack(padx=30, anchor="w")
 
@@ -1769,7 +1769,7 @@ class ControleTonerApp(ctk.CTk):
                 lbl_erro.configure(text="Custo invalido.")
                 return
 
-            editar_toner(toner_id, nova_cor, nova_inst, nova_ret, novo_ini, novo_fim, novo_custo)
+            editar_tonner(tonner_id, nova_cor, nova_inst, nova_ret, novo_ini, novo_fim, novo_custo)
             janela.destroy()
             self.carregar_historico_cores()
             messagebox.showinfo("Sucesso", "Registro atualizado com sucesso!")
@@ -1798,7 +1798,7 @@ class ControleTonerApp(ctk.CTk):
         self.troca_custo.insert(0, "636")
         self.troca_obs.delete(0, "end")
         self.info_label.configure(
-            text="Selecione uma máquina para ver o toner atual",
+            text="Selecione uma máquina para ver o tonner atual",
             text_color=CORES['text_secondary']
         )
         self.troca_contador_info.configure(text="")
@@ -2132,7 +2132,7 @@ class ControleTonerApp(ctk.CTk):
         main_frame, canvas, scrollable_frame = self.criar_frame_com_scroll()
 
         self.criar_titulo(scrollable_frame, "Relatórios",
-                          "Gere relatórios detalhados de rendimento dos toners")
+                          "Gere relatórios detalhados de rendimento dos tonners")
 
         card = self.criar_card(scrollable_frame, "📊 Gerar Relatório")
         card.pack(fill="both", padx=20, pady=10, expand=True)
@@ -2280,7 +2280,7 @@ class ControleTonerApp(ctk.CTk):
                         data_fim=data_fim_sql
                     )
                     rendimentos = [r for lst in rend_dict.values() for r in lst]
-                    ativos = listar_toners_por_maquina(m.id, apenas_ativos=True)
+                    ativos = listar_tonners_por_maquina(m.id, apenas_ativos=True)
                     if rendimentos or ativos:
                         dados_maquinas.append({
                             'nome': m.nome,
@@ -2297,7 +2297,7 @@ class ControleTonerApp(ctk.CTk):
                             data_fim=data_fim_sql
                         )
                         rendimentos = [r for lst in rend_dict.values() for r in lst]
-                        ativos = listar_toners_por_maquina(m.id, apenas_ativos=True)
+                        ativos = listar_tonners_por_maquina(m.id, apenas_ativos=True)
                         if rendimentos or ativos:
                             dados_maquinas.append({
                                 'nome': m.nome,
@@ -2307,12 +2307,12 @@ class ControleTonerApp(ctk.CTk):
                         break
 
             if not dados_maquinas:
-                messagebox.showinfo("Sem dados", "Nenhum toner registrado no período!")
+                messagebox.showinfo("Sem dados", "Nenhum tonner registrado no período!")
                 return
 
             import datetime as dt
             timestamp = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
-            nome_base = maquina_nome if maquina_nome != "Todas" else "relatorio_toners"
+            nome_base = maquina_nome if maquina_nome != "Todas" else "relatorio_tonners"
             nome_base = nome_base.replace(" ", "_")
 
             if formato == "pdf":
@@ -2321,7 +2321,7 @@ class ControleTonerApp(ctk.CTk):
                         title="Salvar PDF como...",
                         defaultextension=".pdf",
                         filetypes=[("PDF", "*.pdf"), ("Todos os arquivos", "*.*")],
-                        initialfile=f"toners_{nome_base}_{timestamp}.pdf"
+                        initialfile=f"tonners_{nome_base}_{timestamp}.pdf"
                     )
                     if not caminho:
                         return
@@ -2330,7 +2330,7 @@ class ControleTonerApp(ctk.CTk):
                         dados_maquinas[0]['nome'],
                         periodo,
                         caminho_destino=caminho,
-                        toners_ativos=dados_maquinas[0].get('ativos', [])
+                        tonners_ativos=dados_maquinas[0].get('ativos', [])
                     )
                     messagebox.showinfo("Sucesso", f"PDF gerado!\n\n{arquivo}")
                     self._abrir_gerenciador_apos_salvar(arquivo)
@@ -2340,8 +2340,8 @@ class ControleTonerApp(ctk.CTk):
                         return
                     arquivos = []
                     for dado in dados_maquinas:
-                        nome_arq = os.path.join(pasta, f"toners_{dado['nome'].replace(' ','_')}_{timestamp}.pdf")
-                        arq = gerar_relatorio_pdf(dado['rendimentos'], dado['nome'], periodo, caminho_destino=nome_arq, toners_ativos=dado.get('ativos', []))
+                        nome_arq = os.path.join(pasta, f"tonners_{dado['nome'].replace(' ','_')}_{timestamp}.pdf")
+                        arq = gerar_relatorio_pdf(dado['rendimentos'], dado['nome'], periodo, caminho_destino=nome_arq, tonners_ativos=dado.get('ativos', []))
                         arquivos.append(arq)
                     messagebox.showinfo("Sucesso", f"{len(arquivos)} PDFs salvos em:\n{pasta}")
                     self._abrir_gerenciador_apos_salvar(pasta)
@@ -2351,7 +2351,7 @@ class ControleTonerApp(ctk.CTk):
                     title="Salvar Excel como...",
                     defaultextension=".xlsx",
                     filetypes=[("Excel", "*.xlsx"), ("Todos os arquivos", "*.*")],
-                    initialfile=f"toners_{nome_base}_{timestamp}.xlsx"
+                    initialfile=f"tonners_{nome_base}_{timestamp}.xlsx"
                 )
                 if not caminho:
                     return
@@ -2366,5 +2366,5 @@ class ControleTonerApp(ctk.CTk):
 
 # ========== PONTO DE ENTRADA ==========
 if __name__ == "__main__":
-    app = ControleTonerApp()
+    app = ControletonnerApp()
     app.mainloop()

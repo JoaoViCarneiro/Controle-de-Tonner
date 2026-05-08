@@ -59,7 +59,7 @@ class PDF(FPDF):
     def header(self):
         self.set_font(FONTE, 'B', 16)
         self.set_text_color(68, 114, 196)
-        self.cell(0, 10, 'Relatorio de Rendimento de Toners', 0, 1, 'C')
+        self.cell(0, 10, 'Relatorio de Rendimento de tonners', 0, 1, 'C')
         self.set_font(FONTE, '', 10)
         self.set_text_color(0, 0, 0)
         self.cell(0, 6, f'Gerado em: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 1, 'C')
@@ -129,41 +129,41 @@ class PDF(FPDF):
         self.cell(35, 10, _fmt_moeda(total_custo), 1, 0, 'R', 1)
         self.cell(37, 10, f"{custo_medio:.4f}".replace('.', ','), 1, 1, 'R', 1)
 
-    def estatisticas(self, rendimentos, toners_ativos):
-        total = len(rendimentos) + len(toners_ativos)
+    def estatisticas(self, rendimentos, tonners_ativos):
+        total = len(rendimentos) + len(tonners_ativos)
         if total == 0:
             return
         self.ln(8)
         self.set_font(FONTE, 'B', 11)
         self.cell(0, 8, 'Analise de Rendimento', 0, 1, 'L')
         self.set_font(FONTE, '', 10)
-        self.cell(60, 6, 'Total de toners:', 0, 0)
-        self.cell(60, 6, f'{total} ({len(toners_ativos)} em uso)', 0, 1)
+        self.cell(60, 6, 'Total de tonners:', 0, 0)
+        self.cell(60, 6, f'{total} ({len(tonners_ativos)} em uso)', 0, 1)
 
-        toners_baixo = sum(1 for r in rendimentos if r.total_impressoes < RENDIMENTO_ESPERADO)
-        if toners_baixo > 0:
+        tonners_baixo = sum(1 for r in rendimentos if r.total_impressoes < RENDIMENTO_ESPERADO)
+        if tonners_baixo > 0:
             self.set_text_color(200, 0, 0)
-            self.cell(60, 6, 'Toners abaixo da meta:', 0, 0)
-            self.cell(60, 6, f'{toners_baixo}', 0, 1)
+            self.cell(60, 6, 'tonners abaixo da meta:', 0, 0)
+            self.cell(60, 6, f'{tonners_baixo}', 0, 1)
             self.set_text_color(0, 0, 0)
 
         if rendimentos:
             media = sum(r.total_impressoes for r in rendimentos) / len(rendimentos)
             self.cell(60, 6, 'Media de impressoes:', 0, 0)
-            self.cell(60, 6, f'{_fmt_numero(media)} pags/toner', 0, 1)
+            self.cell(60, 6, f'{_fmt_numero(media)} pags/tonner', 0, 1)
 
 
 def gerar_relatorio_pdf(rendimentos, maquina_nome, periodo,
-                        caminho_destino=None, toners_ativos=None):
-    if toners_ativos is None:
-        toners_ativos = []
+                        caminho_destino=None, tonners_ativos=None):
+    if tonners_ativos is None:
+        tonners_ativos = []
 
     pasta = _get_pasta_relatorios()
     pdf = PDF()
     pdf.add_page()
     pdf.titulo_maquina(maquina_nome, periodo)
 
-    if rendimentos or toners_ativos:
+    if rendimentos or tonners_ativos:
         pdf.cabecalho_tabela()
 
         total_paginas = 0
@@ -171,7 +171,7 @@ def gerar_relatorio_pdf(rendimentos, maquina_nome, periodo,
         cont_iniciais = []
         cont_finais = []
 
-        for t in toners_ativos:
+        for t in tonners_ativos:
             pdf.linha_tabela({
                 'cor': t.cor, 'data_instalacao': t.data_instalacao,
                 'data_retirada': None, 'contador_inicial': t.contador_inicial,
@@ -199,14 +199,14 @@ def gerar_relatorio_pdf(rendimentos, maquina_nome, periodo,
         pdf.linha_total(total_paginas, total_custo, custo_medio,
                         min(cont_iniciais) if cont_iniciais else None,
                         max(cont_finais) if cont_finais else None)
-        pdf.estatisticas(rendimentos, toners_ativos)
+        pdf.estatisticas(rendimentos, tonners_ativos)
     else:
         pdf.set_font(FONTE, '', 12)
-        pdf.cell(0, 10, 'Nenhum toner registrado no periodo selecionado.', 0, 1, 'C')
+        pdf.cell(0, 10, 'Nenhum tonner registrado no periodo selecionado.', 0, 1, 'C')
 
     if not caminho_destino:
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-        caminho_destino = os.path.join(pasta, f"toners_{maquina_nome.replace(' ','_')}_{ts}.pdf")
+        caminho_destino = os.path.join(pasta, f"tonners_{maquina_nome.replace(' ','_')}_{ts}.pdf")
 
     os.makedirs(os.path.dirname(caminho_destino) if os.path.dirname(caminho_destino) else '.', exist_ok=True)
     pdf.output(caminho_destino)
@@ -235,7 +235,7 @@ def gerar_relatorio_excel(dados_maquinas, periodo, caminho_destino=None):
         ws = wb.create_sheet(title=nome_aba)
 
         ws.merge_cells('A1:H1')
-        ws['A1'].value = f"Relatorio de Rendimento de Toners - {dado['nome']}"
+        ws['A1'].value = f"Relatorio de Rendimento de tonners - {dado['nome']}"
         ws['A1'].font = Font(name='Calibri', size=14, bold=True)
         ws['A1'].alignment = aln_ctr
         ws.row_dimensions[1].height = 25
@@ -328,20 +328,20 @@ def gerar_relatorio_excel(dados_maquinas, periodo, caminho_destino=None):
             ws.merge_cells(f'A{ls}:C{ls}')
             ws.cell(row=ls, column=1, value='RESUMO').font = Font(bold=True, size=11)
             total_todos = len(rendimentos) + len(ativos)
-            ws.cell(row=ls+1, column=1, value='Total de toners:')
-            ws.cell(row=ls+1, column=2, value=f'{total_todos} toner(s) ({len(ativos)} em uso)')
+            ws.cell(row=ls+1, column=1, value='Total de tonners:')
+            ws.cell(row=ls+1, column=2, value=f'{total_todos} tonner(s) ({len(ativos)} em uso)')
             if rendimentos:
                 media = sum(r.total_impressoes for r in rendimentos) / len(rendimentos)
                 ws.cell(row=ls+2, column=1, value='Media de impressoes:')
-                ws.cell(row=ls+2, column=2, value=f"{media:,.0f} paginas/toner".replace(",", "."))
+                ws.cell(row=ls+2, column=2, value=f"{media:,.0f} paginas/tonner".replace(",", "."))
             baixos = sum(1 for r in rendimentos if r.total_impressoes < RENDIMENTO_ESPERADO)
             if baixos > 0:
-                ws.cell(row=ls+3, column=1, value='Toners abaixo da meta:')
-                c = ws.cell(row=ls+3, column=2, value=f'{baixos} toner(s)')
+                ws.cell(row=ls+3, column=1, value='tonners abaixo da meta:')
+                c = ws.cell(row=ls+3, column=2, value=f'{baixos} tonner(s)')
                 c.font = Font(color='CC0000')
         else:
             ws.merge_cells('A6:H6')
-            ws['A6'].value = 'Nenhum toner registrado no periodo selecionado.'
+            ws['A6'].value = 'Nenhum tonner registrado no periodo selecionado.'
             ws['A6'].font = Font(italic=True)
             ws['A6'].alignment = aln_ctr
 
@@ -356,9 +356,9 @@ def gerar_relatorio_excel(dados_maquinas, periodo, caminho_destino=None):
     if not caminho_destino:
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
         if len(dados_maquinas) == 1:
-            caminho_destino = os.path.join(pasta, f"toners_{dados_maquinas[0]['nome'].replace(' ','_')}_{ts}.xlsx")
+            caminho_destino = os.path.join(pasta, f"tonners_{dados_maquinas[0]['nome'].replace(' ','_')}_{ts}.xlsx")
         else:
-            caminho_destino = os.path.join(pasta, f"relatorio_toners_{ts}.xlsx")
+            caminho_destino = os.path.join(pasta, f"relatorio_tonners_{ts}.xlsx")
 
     os.makedirs(os.path.dirname(caminho_destino) if os.path.dirname(caminho_destino) else '.', exist_ok=True)
     wb.save(caminho_destino)

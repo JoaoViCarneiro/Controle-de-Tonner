@@ -1,11 +1,11 @@
 """
 database_operations.py
-CRUD completo com auto-finalização de toners duplicados e função de edição.
+CRUD completo com auto-finalização de tonners duplicados e função de edição.
 """
 
 import sqlite3
 from typing import List, Optional, Dict
-from models import Maquina, Toner, Rendimento
+from models import Maquina, tonner, Rendimento
 from database import get_conexao
 
 
@@ -51,121 +51,121 @@ def deletar_maquina(maquina_id: int) -> bool:
         conn.close()
 
 
-# ==================== TONERS ====================
+# ==================== tonnerS ====================
 
-def registrar_toner(toner: Toner) -> int:
+def registrar_tonner(tonner: tonner) -> int:
     """
-    Registra um novo toner. Se já existir um toner ativo da mesma cor
+    Registra um novo tonner. Se já existir um tonner ativo da mesma cor
     na mesma máquina, ele é finalizado automaticamente.
     """
     conn = get_conexao()
     cursor = conn.cursor()
 
-    # Verifica toner ativo da mesma cor
+    # Verifica tonner ativo da mesma cor
     cursor.execute('''
-        SELECT id FROM toners_individual
+        SELECT id FROM tonners_individual
         WHERE maquina_id=? AND cor=? AND data_retirada IS NULL
         ORDER BY data_instalacao DESC LIMIT 1
-    ''', (toner.maquina_id, toner.cor))
+    ''', (tonner.maquina_id, tonner.cor))
     ativo = cursor.fetchone()
 
     if ativo:
         # Finaliza o anterior automaticamente com o contador inicial do novo
-        cursor.execute('UPDATE toners_individual SET data_retirada=?, contador_final=? WHERE id=?',
-                       (toner.data_instalacao, toner.contador_inicial, ativo[0]))
+        cursor.execute('UPDATE tonners_individual SET data_retirada=?, contador_final=? WHERE id=?',
+                       (tonner.data_instalacao, tonner.contador_inicial, ativo[0]))
 
     cursor.execute('''
-        INSERT INTO toners_individual (maquina_id, cor, data_instalacao, contador_inicial, custo, observacao)
+        INSERT INTO tonners_individual (maquina_id, cor, data_instalacao, contador_inicial, custo, observacao)
         VALUES (?,?,?,?,?,?)
-    ''', (toner.maquina_id, toner.cor, toner.data_instalacao,
-          toner.contador_inicial, toner.custo, toner.observacao))
+    ''', (tonner.maquina_id, tonner.cor, tonner.data_instalacao,
+          tonner.contador_inicial, tonner.custo, tonner.observacao))
 
-    toner_id = cursor.lastrowid
+    tonner_id = cursor.lastrowid
     cursor.execute('UPDATE maquinas SET contador_atual=MAX(contador_atual,?) WHERE id=?',
-                   (toner.contador_inicial, toner.maquina_id))
+                   (tonner.contador_inicial, tonner.maquina_id))
     conn.commit(); conn.close()
-    return toner_id
+    return tonner_id
 
 
-def finalizar_toner(toner_id: int, data_retirada: str, contador_final: int):
+def finalizar_tonner(tonner_id: int, data_retirada: str, contador_final: int):
     conn = get_conexao()
     cursor = conn.cursor()
-    cursor.execute('UPDATE toners_individual SET data_retirada=?, contador_final=? WHERE id=?',
-                   (data_retirada, contador_final, toner_id))
+    cursor.execute('UPDATE tonners_individual SET data_retirada=?, contador_final=? WHERE id=?',
+                   (data_retirada, contador_final, tonner_id))
     cursor.execute('''UPDATE maquinas SET contador_atual=MAX(contador_atual,?)
-                      WHERE id=(SELECT maquina_id FROM toners_individual WHERE id=?)''',
-                   (contador_final, toner_id))
+                      WHERE id=(SELECT maquina_id FROM tonners_individual WHERE id=?)''',
+                   (contador_final, tonner_id))
     conn.commit(); conn.close()
 
 
-def editar_toner(toner_id: int, cor: str, data_instalacao: str,
+def editar_tonner(tonner_id: int, cor: str, data_instalacao: str,
                  data_retirada, contador_inicial: int, contador_final, custo: float):
     """
-    Edita um registro de toner. Se a cor mudar e já houver outro toner
+    Edita um registro de tonner. Se a cor mudar e já houver outro tonner
     ativo desta cor na máquina, o conflito é resolvido automaticamente.
     """
     conn = get_conexao()
     cursor = conn.cursor()
 
-    cursor.execute('SELECT maquina_id FROM toners_individual WHERE id=?', (toner_id,))
+    cursor.execute('SELECT maquina_id FROM tonners_individual WHERE id=?', (tonner_id,))
     row = cursor.fetchone()
     if row:
         maquina_id = row[0]
-        # Verifica conflito: outro toner ativo da nova cor
+        # Verifica conflito: outro tonner ativo da nova cor
         cursor.execute('''
-            SELECT id FROM toners_individual
+            SELECT id FROM tonners_individual
             WHERE maquina_id=? AND cor=? AND data_retirada IS NULL AND id!=?
             LIMIT 1
-        ''', (maquina_id, cor, toner_id))
+        ''', (maquina_id, cor, tonner_id))
         conflito = cursor.fetchone()
         if conflito:
-            cursor.execute('UPDATE toners_individual SET data_retirada=?, contador_final=? WHERE id=?',
+            cursor.execute('UPDATE tonners_individual SET data_retirada=?, contador_final=? WHERE id=?',
                            (data_instalacao, contador_inicial, conflito[0]))
 
     cursor.execute('''
-        UPDATE toners_individual
+        UPDATE tonners_individual
         SET cor=?, data_instalacao=?, data_retirada=?, contador_inicial=?, contador_final=?, custo=?
         WHERE id=?
-    ''', (cor, data_instalacao, data_retirada, contador_inicial, contador_final, custo, toner_id))
+    ''', (cor, data_instalacao, data_retirada, contador_inicial, contador_final, custo, tonner_id))
 
     conn.commit(); conn.close()
 
 
-def listar_toners_por_maquina(maquina_id: int, apenas_ativos: bool = False) -> List[Toner]:
+def listar_tonners_por_maquina(maquina_id: int, apenas_ativos: bool = False) -> List[tonner]:
     conn = get_conexao()
     cursor = conn.cursor()
     query = '''SELECT id, maquina_id, cor, data_instalacao, data_retirada,
                       contador_inicial, contador_final, custo, observacao, data_registro
-               FROM toners_individual WHERE maquina_id=?'''
+               FROM tonners_individual WHERE maquina_id=?'''
     if apenas_ativos:
         query += ' AND data_retirada IS NULL'
     query += ' ORDER BY cor, data_instalacao DESC'
     cursor.execute(query, (maquina_id,))
-    toners = [Toner(id=r[0], maquina_id=r[1], cor=r[2], data_instalacao=r[3],
+    tonners = [tonner(id=r[0], maquina_id=r[1], cor=r[2], data_instalacao=r[3],
                     data_retirada=r[4] or "", contador_inicial=r[5],
                     contador_final=r[6] or 0, custo=r[7],
                     observacao=r[8] or "", data_registro=r[9])
               for r in cursor.fetchall()]
     conn.close()
-    return toners
+    return tonners
 
 
-def get_toners_ativos_por_maquina(maquina_id: int) -> List[Toner]:
-    return listar_toners_por_maquina(maquina_id, apenas_ativos=True)
+def get_tonners_ativos_por_maquina(maquina_id: int) -> List[tonner]:
+    return listar_tonners_por_maquina(maquina_id, apenas_ativos=True)
 
 
-def get_toner_atual_por_cor(maquina_id: int, cor: str) -> Optional[Toner]:
+def get_tonner_atual_por_cor(maquina_id: int, cor: str) -> Optional[tonner]:
     conn = get_conexao()
     cursor = conn.cursor()
     cursor.execute('''SELECT id, maquina_id, cor, data_instalacao, data_retirada,
                              contador_inicial, contador_final, custo, observacao, data_registro
-                      FROM toners_individual
+                      FROM tonners_individual
                       WHERE maquina_id=? AND cor=? AND data_retirada IS NULL
                       ORDER BY data_instalacao DESC LIMIT 1''', (maquina_id, cor))
     row = cursor.fetchone()
     conn.close()
     if row:
-        return Toner(id=row[0], maquina_id=row[1], cor=row[2], data_instalacao=row[3],
+        return tonner(id=row[0], maquina_id=row[1], cor=row[2], data_instalacao=row[3],
                      data_retirada=row[4] or "", contador_inicial=row[5],
                      contador_final=row[6] or 0, custo=row[7],
                      observacao=row[8] or "", data_registro=row[9])
@@ -176,7 +176,7 @@ def get_historico_por_cor(maquina_id: int, cor: str) -> List[Dict]:
     conn = get_conexao()
     cursor = conn.cursor()
     cursor.execute('''SELECT data_instalacao, data_retirada, contador_inicial, contador_final, custo
-                      FROM toners_individual
+                      FROM tonners_individual
                       WHERE maquina_id=? AND cor=? AND data_retirada IS NOT NULL
                       ORDER BY data_instalacao''', (maquina_id, cor))
     historico = []
@@ -205,9 +205,9 @@ def get_ultimo_contador_por_maquina(maquina_id: int) -> int:
     conn = get_conexao()
     cursor = conn.cursor()
     cursor.execute('''SELECT MAX(max_contador) FROM (
-        SELECT MAX(contador_inicial) as max_contador FROM toners_individual WHERE maquina_id=?
+        SELECT MAX(contador_inicial) as max_contador FROM tonners_individual WHERE maquina_id=?
         UNION
-        SELECT MAX(contador_final) as max_contador FROM toners_individual WHERE maquina_id=? AND contador_final IS NOT NULL
+        SELECT MAX(contador_final) as max_contador FROM tonners_individual WHERE maquina_id=? AND contador_final IS NOT NULL
     )''', (maquina_id, maquina_id))
     resultado = cursor.fetchone()
     if resultado and resultado[0]:
@@ -226,7 +226,7 @@ def calcular_rendimento_por_cor(maquina_id: int = None, cor: str = None,
     cursor = conn.cursor()
     query = '''SELECT t.id, t.maquina_id, t.cor, t.data_instalacao, t.data_retirada,
                       t.contador_inicial, t.contador_final, t.custo, m.nome
-               FROM toners_individual t
+               FROM tonners_individual t
                JOIN maquinas m ON t.maquina_id = m.id
                WHERE t.data_retirada IS NOT NULL'''
     params = []
@@ -257,40 +257,40 @@ def calcular_rendimento_por_cor(maquina_id: int = None, cor: str = None,
 def resumo_cores_maquina(maquina_id: int) -> Dict:
     conn = get_conexao()
     cursor = conn.cursor()
-    cursor.execute('''SELECT cor, COUNT(*) as total_toners,
+    cursor.execute('''SELECT cor, COUNT(*) as total_tonners,
                              AVG(contador_final-contador_inicial), SUM(contador_final-contador_inicial),
                              SUM(custo), MIN(contador_final-contador_inicial), MAX(contador_final-contador_inicial)
-                      FROM toners_individual
+                      FROM tonners_individual
                       WHERE maquina_id=? AND data_retirada IS NOT NULL
                       GROUP BY cor ORDER BY cor''', (maquina_id,))
     resumo = {}
     for row in cursor.fetchall():
         cor = row[0]
         resumo[cor] = {
-            'total_toners': row[1], 'media_impressoes': round(row[2] or 0, 0),
+            'total_tonners': row[1], 'media_impressoes': round(row[2] or 0, 0),
             'total_impressoes': row[3] or 0, 'total_custo': row[4] or 0,
             'min_impressoes': row[5] or 0, 'max_impressoes': row[6] or 0,
-            'custo_medio_toner': (row[4] or 0) / row[1] if row[1] > 0 else 0,
+            'custo_medio_tonner': (row[4] or 0) / row[1] if row[1] > 0 else 0,
             'custo_por_pagina': (row[4] or 0) / (row[3] or 1) if row[3] else 0
         }
     conn.close()
     return resumo
 
 
-def get_toner_atual_cores(maquina_id: int) -> Dict[str, Optional[Toner]]:
+def get_tonner_atual_cores(maquina_id: int) -> Dict[str, Optional[tonner]]:
     resultado = {}
     for cor in ['Preto', 'Ciano', 'Magenta', 'Amarelo']:
-        toner = get_toner_atual_por_cor(maquina_id, cor)
-        if toner:
-            resultado[cor] = toner
+        tonner = get_tonner_atual_por_cor(maquina_id, cor)
+        if tonner:
+            resultado[cor] = tonner
     return resultado
 
 
 __all__ = [
     'listar_maquinas', 'salvar_maquina', 'deletar_maquina',
-    'registrar_toner', 'finalizar_toner', 'editar_toner',
-    'listar_toners_por_maquina', 'get_toners_ativos_por_maquina',
-    'get_toner_atual_por_cor', 'get_toner_atual_cores',
+    'registrar_tonner', 'finalizar_tonner', 'editar_tonner',
+    'listar_tonners_por_maquina', 'get_tonners_ativos_por_maquina',
+    'get_tonner_atual_por_cor', 'get_tonner_atual_cores',
     'get_historico_por_cor', 'get_ultimo_contador_por_maquina',
     'calcular_rendimento_por_cor', 'resumo_cores_maquina'
 ]

@@ -18,7 +18,7 @@ class Maquina:
     data_cadastro: str = ""
 
     @property
-    def cores_toner(self) -> List[str]:
+    def cores_tonner(self) -> List[str]:
         if self.tipo == "P&B":
             return ["Preto"]
         else:
@@ -28,8 +28,8 @@ class Maquina:
         return f"{self.nome} (ID: {self.id})"
 
 @dataclass
-class Toner:
-    """Representa um toner físico (cada unidade)"""
+class tonner:
+    """Representa um tonner físico (cada unidade)"""
     id: Optional[int] = None
     maquina_id: int = 0
     cor: str = ""
@@ -43,7 +43,7 @@ class Toner:
 
     @property
     def total_impressoes(self) -> int:
-        """Calcula o total de impressões feitas com este toner"""
+        """Calcula o total de impressões feitas com este tonner"""
         return self.contador_final - self.contador_inicial if self.contador_final > 0 else 0
 
     @property
@@ -53,7 +53,7 @@ class Toner:
 
     @property
     def custo_por_pagina(self) -> float:
-        """Calcula o custo por página deste toner"""
+        """Calcula o custo por página deste tonner"""
         if self.total_impressoes > 0:
             return self.custo / self.total_impressoes
         return 0.0
@@ -64,7 +64,7 @@ class Toner:
 
 @dataclass
 class Rendimento:
-    """Resultado do cálculo de rendimento por toner"""
+    """Resultado do cálculo de rendimento por tonner"""
     cor: str
     data_instalacao: str
     data_retirada: str

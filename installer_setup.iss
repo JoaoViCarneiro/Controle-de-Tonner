@@ -1,14 +1,14 @@
 ; ============================================================
 ; installer_setup.iss
-; Instalador profissional - Controle de Toner v3.0
+; Instalador profissional - Controle de tonner v3.0
 ; Cliente: World Print
 ; Usa onedir para abertura instantanea
 ; ============================================================
 
-#define AppName "Controle de Toner"
+#define AppName "Controle de tonner"
 #define AppVersion "3.0"
 #define AppPublisher "World Print"
-#define AppExeName "ControleToner.exe"
+#define AppExeName "Controletonner.exe"
 #define AppId "{{B7F3A1C2-D4E5-4890-BCDE-FA2345678901}"
 
 [Setup]
@@ -36,7 +36,7 @@ WizardResizable=no
 SetupIconFile=icone.ico
 
 OutputDir=instalador_final
-OutputBaseFilename=ControleToner_WorldPrint_v{#AppVersion}_Setup
+OutputBaseFilename=Controletonner_WorldPrint_v{#AppVersion}_Setup
 
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=commandline
@@ -61,7 +61,7 @@ Name: "desktopicon"; Description: "Criar atalho na Area de Trabalho"; GroupDescr
 
 [Files]
 ; Todos os arquivos da pasta onedir gerada pelo PyInstaller
-Source: "dist\ControleToner\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\Controletonner\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Icone separado para atalhos
 Source: "icone.ico"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
@@ -71,12 +71,12 @@ Source: "icone.ico"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntex
 Name: "{app}\db"; Permissions: everyone-full
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icone.ico"; Comment: "Controle de Toner - World Print"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icone.ico"; Comment: "Controle de Toner - World Print"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icone.ico"; Comment: "Controle de tonner - World Print"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\icone.ico"; Comment: "Controle de tonner - World Print"; Tasks: desktopicon
 Name: "{group}\Desinstalar {#AppName}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Iniciar o Controle de Toner agora"; Flags: nowait postinstall skipifsilent unchecked
+Filename: "{app}\{#AppExeName}"; Description: "Iniciar o Controle de tonner agora"; Flags: nowait postinstall skipifsilent unchecked
 
 [UninstallDelete]
 ; Preserva a pasta db (dados) ao desinstalar
@@ -94,7 +94,7 @@ begin
     'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppId}_is1',
     'DisplayVersion', OldVersion) then
   begin
-    Msg := 'O Controle de Toner versao ' + OldVersion + ' ja esta instalado.';
+    Msg := 'O Controle de tonner versao ' + OldVersion + ' ja esta instalado.';
     Msg := Msg + #13#10 + #13#10;
     Msg := Msg + 'Deseja atualizar para a versao {#AppVersion}?';
     Msg := Msg + #13#10;
@@ -106,7 +106,7 @@ end;
 
 procedure InitializeWizard();
 begin
-  WizardForm.Caption := 'Controle de Toner v{#AppVersion} - World Print';
+  WizardForm.Caption := 'Controle de tonner v{#AppVersion} - World Print';
   WizardForm.NextButton.Caption := 'Instalar';
   WizardForm.BackButton.Visible := False;
 end;

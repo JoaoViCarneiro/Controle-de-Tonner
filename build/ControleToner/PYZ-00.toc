@@ -1,4 +1,4 @@
-('D:\\Controle de Tonner\\build\\ControleToner\\PYZ-00.pyz',
+('D:\\Controle de Tonner\\build\\Controletonner\\PYZ-00.pyz',
  [('PIL',
    'C:\\Users\\João\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\__init__.py',
    'PYMODULE'),

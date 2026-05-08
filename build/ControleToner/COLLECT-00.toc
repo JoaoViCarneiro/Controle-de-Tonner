@@ -1,5 +1,5 @@
-([('ControleToner.exe',
-   'D:\\Controle de Tonner\\build\\ControleToner\\ControleToner.exe',
+([('Controletonner.exe',
+   'D:\\Controle de Tonner\\build\\Controletonner\\Controletonner.exe',
    'EXECUTABLE'),
   ('python314.dll',
    'C:\\Users\\João\\AppData\\Local\\Python\\pythoncore-3.14-64\\python314.dll',
@@ -3080,5 +3080,5 @@
    'C:\\Users\\João\\AppData\\Local\\Python\\pythoncore-3.14-64\\tcl\\tcl8.6\\http1.0\\http.tcl',
    'DATA'),
   ('base_library.zip',
-   'D:\\Controle de Tonner\\build\\ControleToner\\base_library.zip',
+   'D:\\Controle de Tonner\\build\\Controletonner\\base_library.zip',
    'DATA')],)

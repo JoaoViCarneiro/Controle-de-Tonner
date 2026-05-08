@@ -9,7 +9,7 @@ import platform
 
 # ========== DETECTAR VERSÃO DO WINDOWS ==========
 print("=" * 60)
-print("🚀 CONTROLE DE TONER - INICIANDO...")
+print("🚀 CONTROLE DE tonner - INICIANDO...")
 print("=" * 60)
 
 # Verificar se é Windows
@@ -63,7 +63,7 @@ print(f"📁 Diretório atual: {os.path.dirname(os.path.abspath(__file__))}")
 # ========== INICIAR APLICAÇÃO ==========
 try:
     print("🔄 Inicializando sistema...")
-    from gui_app import ControleTonerApp
+    from gui_app import ControletonnerApp
 
     print("✅ Sistema carregado com sucesso!")
 except ImportError as e:
@@ -88,7 +88,7 @@ except ImportError as e:
 if __name__ == "__main__":
     try:
         print("🚀 Iniciando aplicação...")
-        app = ControleTonerApp()
+        app = ControletonnerApp()
 
         # Configurar ícone da janela com fallback
         try:
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         except:
             print("⚠️  Não foi possível definir ícone da janela")
 
-        app.title("Controle de Toner v3.0")
+        app.title("Controle de tonner v3.0")
         app.mainloop()
 
     except Exception as e:

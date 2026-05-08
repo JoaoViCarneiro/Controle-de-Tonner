@@ -1,12 +1,12 @@
 @echo off
 :: ============================================================
 :: build.bat
-:: Script para gerar o executavel do Controle de Toner
+:: Script para gerar o executavel do Controle de tonner
 :: Usa --onedir para abertura instantanea (sem extracao temp)
 :: ============================================================
 
 echo ============================================================
-echo  BUILD - CONTROLE DE TONER v3.0
+echo  BUILD - CONTROLE DE tonner v3.0
 echo ============================================================
 echo.
 
@@ -64,7 +64,7 @@ if exist "icone.ico" (
 python -m PyInstaller ^
     --onedir ^
     --windowed ^
-    --name="ControleToner" ^
+    --name="Controletonner" ^
     %ICON_ARG% ^
     --add-data="database.py;." ^
     --add-data="database_operations.py;." ^
@@ -93,15 +93,15 @@ if errorlevel 1 (
 )
 
 echo.
-echo [OK] Pasta gerada: dist\ControleToner\
+echo [OK] Pasta gerada: dist\Controletonner\
 
-if exist "icone.ico" copy "icone.ico" "dist\ControleToner\" >nul
+if exist "icone.ico" copy "icone.ico" "dist\Controletonner\" >nul
 
 echo.
 echo [4/4] Build concluido com sucesso!
 echo.
 echo ============================================================
-echo  PASTA GERADA EM: dist\ControleToner\
+echo  PASTA GERADA EM: dist\Controletonner\
 echo  Proximo passo: Compile o instalador com o Inno Setup
 echo  Arquivo: installer_setup.iss
 echo ============================================================

@@ -1,7 +1,7 @@
 """
 limpar_dados.py
 UTILITÁRIO PARA LIMPAR TODOS OS DADOS DO SISTEMA
-Execute este arquivo na mesma pasta do ControleToner.exe
+Execute este arquivo na mesma pasta do Controletonner.exe
 """
 
 import os
@@ -86,12 +86,12 @@ def limpar_tudo():
 
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("🛠️  UTILITÁRIO DE LIMPEZA - CONTROLE DE TONER")
+    print("🛠️  UTILITÁRIO DE LIMPEZA - CONTROLE DE tonner")
     print("=" * 60)
     print(f"\n📁 Pasta do banco: {get_db_dir()}")
     print("\n⚠️  ATENÇÃO: Esta operação irá apagar TODOS os dados:")
     print("   - Todas as máquinas cadastradas")
-    print("   - Todas as trocas de toner")
+    print("   - Todas as trocas de tonner")
     print("   - Todos os contadores semanais")
     print("   - Todos os relatórios gerados")
     print("   - Todos os backups")

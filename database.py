@@ -82,7 +82,7 @@ def init_database():
     ''')
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS toners_individual (
+        CREATE TABLE IF NOT EXISTS tonners_individual (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             maquina_id INTEGER NOT NULL,
             cor TEXT NOT NULL,
