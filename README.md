@@ -227,11 +227,10 @@ O projeto foi preparado principalmente para Windows. Há trechos de compatibilid
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-cd SEU_REPOSITORIO
+git clone https://github.com/JoaoViCarneiro/Controle-de-Tonner
+cd Controle-de-Tonner
 ```
 
-Substitua `SEU_USUARIO/SEU_REPOSITORIO` pelo endereço real do repositório.
 
 ### 2. Criar um ambiente virtual
 
